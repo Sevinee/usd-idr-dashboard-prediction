@@ -610,19 +610,18 @@ df1 = df1.rename(columns={"Exchange Rate USD/IDR": "predicted_usd_idr"})
 
 # ⬇⬇⬇ Tambahkan ini SEBELUM menulis ulang file pred_latest
 try:
-    prev_pred_latest = pd.read_csv("usd_idr_pred_latest.csv", index_col=0)
+    prev_pred_latest = pd.read_csv("usd_idr_pred_latest.csv", index_col=0, comment="#")
     if not prev_pred_latest.empty:
         pred_yesterday = prev_pred_latest.iloc[[0]]
         pred_yesterday.to_csv("usd_idr_pred_yesterday.csv", index_label="date")
 
-        # ⬅ Tambahkan komentar setelah baris data, agar GitHub detect file berubah
+        # Tambahkan komentar agar GitHub push
         with open("usd_idr_pred_yesterday.csv", "a") as f:
             f.write(f"# updated at {datetime.now()}\n")
-
     else:
         print("⚠ File prediksi sebelumnya kosong.")
-except Exception as e:
-    print(f"⚠ Gagal simpan prediksi kemarin: {e}")
+except FileNotFoundError:
+    print("⚠ Tidak ditemukan file prediksi sebelumnya.")
 
 # ⬇ Simpan prediksi terbaru
 df1.iloc[1:].to_csv("usd_idr_pred_latest.csv", index_label="date")
