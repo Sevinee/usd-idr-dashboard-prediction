@@ -615,6 +615,10 @@ df1 = df1.rename(columns={"Exchange Rate USD/IDR": "predicted_usd_idr"})
 # Simpan hanya H+1 sampai H+7 (tanpa H+0)
 df1.iloc[1:].to_csv("usd_idr_pred_latest.csv", index_label="date")
 
+# Simpan baris H+1 (prediksi untuk hari besok) sebagai prediksi dari "kemarin"
+df1.iloc[[1]].to_csv("usd_idr_pred_yesterday.csv", index_label="date")
+
+
 # ====== Simpan Backup Harian ======
 backup_dir = "usd_idr_pred_backup"
 os.makedirs(backup_dir, exist_ok=True)
@@ -626,6 +630,7 @@ df1.to_csv(f"{backup_dir}/{today_str}.csv", index_label="date")
 for fname in [
     "usd_idr_actual.csv",
     "usd_idr_pred_latest.csv",
+    "usd_idr_pred_yesterday.csv",
     f"{backup_dir}/{today_str}.csv"
 ]:
     with open(fname, "a") as f:
