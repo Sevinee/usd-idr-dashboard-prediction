@@ -261,10 +261,14 @@ prediction2 = prediction2[:, 1]
 # DF data test vs prediksi
 df_test2 = df_final["crude_oil"][int(len(df_final)*0.8):]
 prediction2 = np.array(prediction2)
+
+min_len = min(len(df_test2), len(prediction2))
+df_test2 = df_test2[-min_len:]
+prediction2 = prediction2[-min_len:]
+
 df_hasil2 = pd.DataFrame()
 df_hasil2['Real Crude Oil Price'] = df_test2
 df_hasil2['Prediction'] = prediction2
-df_hasil2
 
 # Plot data test vs forecast
 plt.figure(figsize = (16,8))
@@ -356,6 +360,11 @@ prediction3 = prediction3[:, 2]
 # DF data test vs prediksi
 df_test3 = df_final["gold"][int(len(df_final)*0.8):]
 prediction3 = np.array(prediction3)
+
+min_len = min(len(df_test3), len(prediction3))
+df_test3 = df_test3[-min_len:]
+prediction3 = prediction3[-min_len:]
+
 df_hasil3 = pd.DataFrame()
 df_hasil3['Real Gold Price'] = df_test3
 df_hasil3['Prediction'] = prediction3
@@ -450,6 +459,11 @@ prediction4 = prediction4[:, 3]
 # DF data test vs prediksi
 df_test4 = df_final["inflation"][int(len(df_final)*0.8):]
 prediction4 = np.array(prediction4)
+
+min_len = min(len(df_test4), len(prediction4))
+df_test4 = df_test4[-min_len:]
+prediction4 = prediction4[-min_len:]
+
 df_hasil4 = pd.DataFrame()
 df_hasil4['Real Inflation'] = df_test4
 df_hasil4['Prediction'] = prediction4
@@ -596,3 +610,4 @@ df_forecast.rename(columns={"Exchange Rate USD/IDR": "predicted_usd_idr"}).to_cs
 
 # Simpan prediksi kemarin (semua kecuali baris terakhir)
 df_forecast.iloc[:-1].rename(columns={"Exchange Rate USD/IDR": "predicted_usd_idr"}).to_csv("usd_idr_pred_yesterday.csv", index_label="date")
+
