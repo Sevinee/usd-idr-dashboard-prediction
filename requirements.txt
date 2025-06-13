@@ -1,0 +1,10 @@
+numpy
+pandas
+scikit-learn
+matplotlib
+seaborn
+yfinance
+requests
+joblib
+streamlit
+plotly
