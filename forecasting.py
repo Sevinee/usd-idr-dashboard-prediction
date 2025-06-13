@@ -604,22 +604,25 @@ plt.show()
 
 from datetime import datetime
 
-# Simpan data aktual harian
+# Rename dan simpan data aktual
 df_exchange = df_exchange.rename(columns={"Exchange Rate USD/IDR": "usd_idr"})
 df_exchange.to_csv("usd_idr_actual.csv", index_label="date")
 
-# Simpan prediksi terbaru (H+1 dan seterusnya)
+# Rename data prediksi
 df1 = df1.rename(columns={"Exchange Rate USD/IDR": "predicted_usd_idr"})
+
+# Simpan prediksi terbaru (H+1 dan seterusnya)
 df1.iloc[1:].to_csv("usd_idr_pred_latest.csv", index_label="date")
 
 # Ambil tanggal aktual terakhir (biasanya hari ini)
 last_actual_date = df_exchange.index.max()
 
-# Cari prediksi yang sesuai tanggal aktual terakhir (misalnya prediksi untuk hari ini dari kemarin)
-pred_yesterday = df1[df1.index == last_actual_date]
+# Simpan prediksi kemarin yang ditujukan untuk tanggal aktual hari ini (iloc[0] = prediksi H+1 dari kemarin)
+# Perlu disimpan saat prediksi dilakukan kemarin — pastikan kamu menyimpan iloc[0] dari df1 KEMARIN
 
-if not pred_yesterday.empty:
-    pred_yesterday.to_csv("usd_idr_pred_yesterday.csv", index_label="date")
+# Cek apakah prediksi hari ini untuk tanggal aktual hari ini tersedia
+if last_actual_date in df1.index:
+    df1.loc[[last_actual_date]].to_csv("usd_idr_pred_yesterday.csv", index_label="date")
 else:
     print(f"⚠️ Tidak ditemukan prediksi untuk tanggal aktual terakhir ({last_actual_date})")
 
