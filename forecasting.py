@@ -602,37 +602,49 @@ plt.legend(loc = "upper left")
 plt.grid()
 plt.show()
 
-# Simpan data aktual
-df_exchange.rename(columns={"Exchange Rate USD/IDR": "usd_idr"}).to_csv("usd_idr_actual.csv", index_label="date")
+# ======== 1. Simpan data aktual terbaru ========
+df_exchange.rename(columns={"Exchange Rate USD/IDR": "usd_idr"}).to_csv(
+    "usd_idr_actual.csv", index_label="date"
+)
 
-# Ubah nama kolom df1 agar konsisten
+# ======== 2. Siapkan df1: hasil prediksi (1 hari + 7 hari) ========
 df1 = df1.rename(columns={"Exchange Rate USD/IDR": "predicted_usd_idr"})
 
-# ⬇⬇⬇ Tambahkan ini SEBELUM menulis ulang file pred_latest
+# ======== 3. Simpan prediksi kemarin dengan cara AMAN ========
+# Ambil prediksi sebelumnya (kemarin)
+from datetime import datetime
+
 try:
     prev_pred_latest = pd.read_csv("usd_idr_pred_latest.csv", index_col=0, comment="#")
+
     if not prev_pred_latest.empty:
+        # Rename kolom jika perlu
+        if "Exchange Rate USD/IDR" in prev_pred_latest.columns:
+            prev_pred_latest = prev_pred_latest.rename(columns={
+                "Exchange Rate USD/IDR": "predicted_usd_idr"
+            })
+
+        # Ambil baris pertama dari prediksi sebelumnya (prediksi untuk hari ini)
         pred_yesterday = prev_pred_latest.iloc[[0]]
+
+        # Simpan ke file
         pred_yesterday.to_csv("usd_idr_pred_yesterday.csv", index_label="date")
 
-        # Tambahkan komentar agar GitHub push
+        # Tambahkan komentar agar GitHub deteksi file berubah
         with open("usd_idr_pred_yesterday.csv", "a") as f:
             f.write(f"# updated at {datetime.now()}\n")
     else:
         print("⚠ File prediksi sebelumnya kosong.")
-except FileNotFoundError:
-    print("⚠ Tidak ditemukan file prediksi sebelumnya.")
+except Exception as e:
+    print(f"⚠ Gagal simpan prediksi kemarin: {e}")
 
-# ⬇ Simpan prediksi terbaru
+# ======== 4. Simpan prediksi terbaru (H+1 dan seterusnya) ========
 df1.iloc[1:].to_csv("usd_idr_pred_latest.csv", index_label="date")
 
-# Tambahkan komentar ke file terbaru
-with open("usd_idr_pred_latest.csv", "a") as f:
-    f.write(f"# updated at {datetime.now()}\n")
-
-# Tambahkan komentar ke file aktual
-with open("usd_idr_actual.csv", "a") as f:
-    f.write(f"# updated at {datetime.now()}\n")
+# Tambahkan komentar juga agar GitHub detect perubahan
+for fname in ["usd_idr_actual.csv", "usd_idr_pred_latest.csv"]:
+    with open(fname, "a") as f:
+        f.write(f"# updated at {datetime.now()}\n")
 
 from datetime import datetime
 
