@@ -23,10 +23,34 @@ forecast_latest = pd.read_csv("usd_idr_pred_latest.csv", index_col=0, comment="#
 # Coba baca data prediksi kemarin (H+1 dari kemarin = hari ini)
 try:
     forecast_yesterday = pd.read_csv("usd_idr_pred_yesterday.csv", index_col=0, comment="#")
+    forecast_yesterday.index = pd.to_datetime(forecast_yesterday.index)
     forecast_yesterday = forecast_yesterday[forecast_yesterday.columns.intersection(['predicted_usd_idr'])]
 except Exception as e:
     forecast_yesterday = pd.DataFrame()
     print("⚠️ Gagal membaca prediksi kemarin:", e)
+
+# Fallback: Jika forecast_yesterday kosong, ambil dari backup
+if forecast_yesterday.empty:
+    try:
+        # Ambil tanggal aktual terakhir dan tentukan tanggal kemarin
+        last_actual_date = actual_data['date'].max()
+        yesterday_date = last_actual_date - pd.Timedelta(days=1)
+        backup_path = f"usd_idr_pred_backup/{yesterday_date.strftime('%Y-%m-%d')}.csv"
+
+        # Baca file backup prediksi kemarin
+        backup_df = pd.read_csv(backup_path, index_col=0, comment="#")
+        backup_df.index = pd.to_datetime(backup_df.index)
+
+        # Ambil baris prediksi yang ditujukan untuk hari ini (last_actual_date)
+        if last_actual_date in backup_df.index:
+            forecast_yesterday = backup_df.loc[[last_actual_date]].reset_index()
+            forecast_yesterday = forecast_yesterday.rename(columns={"index": "date"})
+        else:
+            st.warning(f"📌 Backup ditemukan ({backup_path}), tapi tidak memuat prediksi untuk {last_actual_date.date()}")
+    except Exception as e:
+        st.warning("📌 Gagal membaca backup prediksi dari kemarin.")
+        st.exception(e)
+
 
 # ====== FORMAT ULANG ======
 actual_data = actual_data.reset_index().rename(columns={"index": "date"})
