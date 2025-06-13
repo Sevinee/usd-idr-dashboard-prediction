@@ -29,9 +29,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import mean_squared_error
-from keras.models import Sequential,load_model
-from keras.layers import Dense
-from keras.layers import LSTM
+from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.layers import Dense, LSTM
 
 # ===============================
 # 1. Ambil Data Crude Oil, Emas, dan Kurs USD/IDR
