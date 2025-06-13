@@ -8,3 +8,4 @@ requests
 joblib
 streamlit
 plotly
+tensorflow
