@@ -37,7 +37,7 @@ forecast_data["type"] = "forecast"
 forecast_data = forecast_data[forecast_data['date'].dt.weekday < 5]
 forecast_yesterday = forecast_yesterday[forecast_yesterday['date'].dt.weekday < 5]
 
-# ====== Gabungkan untuk visualisasi utama ======
+# ====== Gabungkan untuk visualisasi utama (tanpa forecast_yesterday) ======
 data = pd.concat([actual_data, forecast_data], ignore_index=True)
 
 # ====== SET PAGE ======
@@ -66,28 +66,25 @@ fig.update_traces(
 # ====== Garis Penghubung Aktual -> Prediksi ======
 last_actual_point = actual_data.sort_values("date").iloc[-1]
 try:
-    first_forecast_point = forecast_data[forecast_data["date"] >= last_actual_point["date"]].sort_values("date").iloc[0]
+    first_forecast_point = forecast_data[forecast_data["date"] > last_actual_point["date"]].sort_values("date").iloc[0]
     fig.add_trace(go.Scatter(
         x=[last_actual_point["date"], first_forecast_point["date"]],
         y=[last_actual_point["value"], first_forecast_point["value"]],
         mode="lines+markers",
         line=dict(color="blue", dash="dot"),
         marker=dict(size=10, color="blue"),
-        name="Actual → Forecast",
+        name="Today Actual",
         showlegend=True
     ))
 except IndexError:
-    st.warning("⚠️ Tidak ada titik prediksi yang sejajar atau setelah data aktual terakhir.")
+    st.warning("⚠️ Tidak ada titik prediksi setelah data aktual terakhir.")
 
-# ====== TAMPILKAN ======
+# ====== TAMPILKAN GRAFIK ======
 st.plotly_chart(fig, use_container_width=True)
 
 # ====== INFO PREDIKSI KEMARIN ======
 try:
-    # Ambil tanggal terakhir dari data aktual
     last_actual_date = actual_data['date'].max().date()
-
-    # Cek apakah forecast_yesterday punya prediksi untuk tanggal tersebut
     pred_yest_val_series = forecast_yesterday[forecast_yesterday['date'].dt.date == last_actual_date]['predicted_usd_idr']
 
     if not pred_yest_val_series.empty:
@@ -102,11 +99,10 @@ except Exception as e:
     st.warning("📌 Gagal membandingkan prediksi kemarin dengan data aktual.")
     st.exception(e)
 
-
-# ====== NOTIFIKASI LIBUR ======
-today = datetime.today().date()
-if today not in actual_data['date'].dt.date.values:
-    st.warning("📅 Hari ini perdagangan libur")
+# ====== NOTIFIKASI LIBUR (Weekend Saja) ======
+today = datetime.today()
+if today.weekday() >= 5:
+    st.warning("📅 Hari ini perdagangan libur (weekend)")
 
 # ====== TREN NAIK/TURUN ======
 last_7_actual = actual_data.sort_values("date").tail(7)["value"].mean()
