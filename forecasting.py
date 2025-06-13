@@ -606,10 +606,10 @@ plt.show()
 df_exchange.rename(columns={"Exchange Rate USD/IDR": "usd_idr"}).to_csv("usd_idr_actual.csv", index_label="date")
 
 # Simpan prediksi terbaru
-df_forecast.rename(columns={"Exchange Rate USD/IDR": "predicted_usd_idr"}).to_csv("usd_idr_pred_latest.csv", index_label="date")
+df1.rename(columns={"Exchange Rate USD/IDR": "predicted_usd_idr"}).to_csv("usd_idr_pred_latest.csv", index_label="date")
 
 # Simpan prediksi kemarin (semua kecuali baris terakhir)
-df_forecast.iloc[:-1].rename(columns={"Exchange Rate USD/IDR": "predicted_usd_idr"}).to_csv("usd_idr_pred_yesterday.csv", index_label="date")
+df1.iloc[:-1].rename(columns={"Exchange Rate USD/IDR": "predicted_usd_idr"}).to_csv("usd_idr_pred_yesterday.csv", index_label="date")
 
 from datetime import datetime
 
