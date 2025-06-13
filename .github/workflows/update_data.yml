@@ -2,7 +2,7 @@ name: Run Daily Forecast
 
 on:
   schedule:
-    - cron: '0 02 * * *'  # Run tiap hari jam 9.00 WIB
+    - cron: '0 12 * * *'  # Run tiap hari jam 19.00 WIB
   workflow_dispatch:
 
 jobs:
