@@ -63,20 +63,21 @@ fig.update_traces(
     hovertemplate='Tanggal: %{x|%d %b %Y}<br>Nilai: Rp %{y:,.2f}'
 )
 
-# ====== Garis Penghubung Aktual -> Prediksi ======
+# ====== Garis Penghubung Aktual -> Prediksi (Fix agar tanggal sama ikut) ======
 last_actual_point = actual_data.sort_values("date").iloc[-1]
-# Hindari tumpang tindih, pastikan prediksi dimulai setelah aktual terakhir
-first_forecast_point = forecast_data[forecast_data["date"] > last_actual_point["date"]].sort_values("date").iloc[0]
-
-fig.add_trace(go.Scatter(
-    x=[last_actual_point["date"], first_forecast_point["date"]],
-    y=[last_actual_point["value"], first_forecast_point["value"]],
-    mode="lines+markers",
-    line=dict(color="blue", dash="dot"),
-    marker=dict(size=10, color="blue"),
-    name="today actual",
-    showlegend=True
-))
+try:
+    first_forecast_point = forecast_data[forecast_data["date"] >= last_actual_point["date"]].sort_values("date").iloc[0]
+    fig.add_trace(go.Scatter(
+        x=[last_actual_point["date"], first_forecast_point["date"]],
+        y=[last_actual_point["value"], first_forecast_point["value"]],
+        mode="lines+markers",
+        line=dict(color="blue", dash="dot"),
+        marker=dict(size=10, color="blue"),
+        name="today actual",
+        showlegend=True
+    ))
+except IndexError:
+    st.warning("⚠️ Prediksi tidak tersedia untuk tanggal setelah data aktual terakhir.")
 
 # ====== TAMPILKAN ======
 st.plotly_chart(fig, use_container_width=True)
