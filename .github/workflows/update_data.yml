@@ -25,6 +25,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Hapus file CSV lama
+        run: |
+          rm -f *.csv  # Hapus semua file CSV supaya dianggap baru
+
       - name: Run fetch script
         run: python fetch_data.py
 
@@ -37,11 +41,7 @@ jobs:
           git config user.email github-actions@github.com
           git fetch origin
           git reset --hard origin/main
-
-          # Paksa Git mendeteksi perubahan CSV
-          rm -f *.csv
-          python forecasting.py  # jalankan ulang untuk regenerasi file
-
+          
           git add *.csv
 
           git commit -m "Auto update CSV $(date +'%Y-%m-%d %H:%M:%S')" || echo "Nothing to commit"
