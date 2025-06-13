@@ -605,37 +605,27 @@ plt.show()
 from datetime import datetime
 import os
 
-# ====== Rename dan Simpan Data ======
+# ====== Rename dan Simpan Data Aktual ======
 df_exchange = df_exchange.rename(columns={"Exchange Rate USD/IDR": "usd_idr"})
 df_exchange.to_csv("usd_idr_actual.csv", index_label="date")
 
+# ====== Rename dan Simpan Data Prediksi ======
 df1 = df1.rename(columns={"Exchange Rate USD/IDR": "predicted_usd_idr"})
 
-# Simpan prediksi terbaru (H+1 dan seterusnya, tidak termasuk H+0)
+# Simpan hanya H+1 sampai H+7 (tanpa H+0)
 df1.iloc[1:].to_csv("usd_idr_pred_latest.csv", index_label="date")
 
-# ====== Simpan prediksi H+1 dari kemarin ======
-# Ambil tanggal aktual terakhir (biasanya hari ini)
-last_actual_date = df_exchange.index.max()
-
-# Cari prediksi untuk tanggal aktual terakhir
-if last_actual_date in df1.index:
-    df1.loc[[last_actual_date]].to_csv("usd_idr_pred_yesterday.csv", index_label="date")
-else:
-    print(f"⚠️ Tidak ditemukan prediksi untuk tanggal aktual terakhir ({last_actual_date})")
-
-# ====== Backup: Simpan seluruh hasil prediksi df1 ke folder berdasarkan tanggal hari ini ======
+# ====== Simpan Backup Harian ======
 backup_dir = "usd_idr_pred_backup"
 os.makedirs(backup_dir, exist_ok=True)
 
 today_str = datetime.today().strftime("%Y-%m-%d")
 df1.to_csv(f"{backup_dir}/{today_str}.csv", index_label="date")
 
-# Tambahkan timestamp agar GitHub Action mendeteksi perubahan
+# Tambahkan timestamp agar GitHub Action detect perubahan
 for fname in [
     "usd_idr_actual.csv",
     "usd_idr_pred_latest.csv",
-    "usd_idr_pred_yesterday.csv",
     f"{backup_dir}/{today_str}.csv"
 ]:
     with open(fname, "a") as f:
