@@ -13,11 +13,13 @@ import plotly.express as px
 from datetime import datetime
 
 # ====== LOAD DATA ======
-actual_data = pd.read_csv("usd_idr_actual.csv", parse_dates=["date"])
-forecast_latest = pd.read_csv("usd_idr_pred_latest.csv", comment="#")
-forecast_yesterday = pd.read_csv("usd_idr_pred_yesterday.csv", comment="#")
+# Gunakan comment="#" untuk skip baris komentar "# updated at"
+actual_data = pd.read_csv("usd_idr_actual.csv", comment="#", parse_dates=["date"])
+forecast_latest = pd.read_csv("usd_idr_pred_latest.csv", comment="#", parse_dates=["date"])
+forecast_yesterday = pd.read_csv("usd_idr_pred_yesterday.csv", comment="#", parse_dates=["date"])
 
-# Pastikan kolom date dalam format datetime
+# Pastikan semua kolom date dalam format datetime
+actual_data['date'] = pd.to_datetime(actual_data['date'])
 forecast_latest['date'] = pd.to_datetime(forecast_latest['date'])
 forecast_yesterday['date'] = pd.to_datetime(forecast_yesterday['date'])
 
@@ -43,7 +45,6 @@ st.title("📈 Dashboard Prediksi Nilai Tukar USD/IDR")
 st.caption("Prediksi nilai tukar untuk 7 hari ke depan berdasarkan data 30 hari terakhir")
 
 # ====== GRAFIK UTAMA ======
-# Filter data 30 hari terakhir + 7 hari ke depan untuk tampilan utama
 last_actual_date = actual_data['date'].max()
 visual_data = data[data['date'] >= last_actual_date - pd.Timedelta(days=30)]
 
@@ -51,7 +52,6 @@ fig = px.line(visual_data, x='date', y='value', color='type',
               line_dash='type',
               labels={'value': 'Nilai Tukar (Rp)', 'date': 'Tanggal'},
               title='Nilai Tukar USD/IDR - Aktual dan Prediksi (30 Hari + Forecast)')
-
 fig.update_traces(mode="lines+markers", hovertemplate='Tanggal: %{x|%d %b %Y}<br>Nilai: Rp %{y:,.2f}')
 st.plotly_chart(fig, use_container_width=True)
 
