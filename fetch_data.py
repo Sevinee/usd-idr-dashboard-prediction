@@ -31,6 +31,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import mean_squared_error
 from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, LSTM
+from datetime import datetime, timedelta
 
 # ===============================
 # 1. Ambil Data Crude Oil, Emas, dan Kurs USD/IDR
