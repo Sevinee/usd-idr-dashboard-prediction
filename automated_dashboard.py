@@ -14,8 +14,8 @@ from datetime import datetime
 
 # ====== LOAD DATA ======
 actual_data = pd.read_csv("usd_idr_actual.csv", parse_dates=["date"])
-forecast_yesterday = pd.read_csv("usd_idr_pred_yesterday.csv")
-forecast_latest = pd.read_csv("usd_idr_pred_latest.csv")
+forecast_latest = pd.read_csv("usd_idr_pred_latest.csv", comment="#")
+forecast_yesterday = pd.read_csv("usd_idr_pred_yesterday.csv", comment="#")
 
 # Pastikan kolom date dalam format datetime
 forecast_latest['date'] = pd.to_datetime(forecast_latest['date'])
