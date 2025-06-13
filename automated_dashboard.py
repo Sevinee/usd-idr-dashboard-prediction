@@ -11,23 +11,22 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from datetime import datetime
+import plotly.graph_objects as go
 
 # ====== LOAD DATA ======
 actual_data = pd.read_csv("usd_idr_actual.csv", comment="#", index_col=0)
 forecast_latest = pd.read_csv("usd_idr_pred_latest.csv", comment="#", index_col=0)
 forecast_yesterday = pd.read_csv("usd_idr_pred_yesterday.csv", comment="#", index_col=0)
 
-# Reset index dan pastikan kolom date
+# ====== FORMAT ULANG ======
 actual_data = actual_data.reset_index().rename(columns={"index": "date"})
 forecast_latest = forecast_latest.reset_index().rename(columns={"index": "date"})
 forecast_yesterday = forecast_yesterday.reset_index().rename(columns={"index": "date"})
 
-# Konversi format date
 actual_data["date"] = pd.to_datetime(actual_data["date"])
 forecast_latest["date"] = pd.to_datetime(forecast_latest["date"])
 forecast_yesterday["date"] = pd.to_datetime(forecast_yesterday["date"])
 
-# Rename kolom agar seragam
 actual_data = actual_data.rename(columns={"usd_idr": "value"})
 actual_data["type"] = "actual"
 
@@ -38,7 +37,7 @@ forecast_data["type"] = "forecast"
 forecast_data = forecast_data[forecast_data['date'].dt.weekday < 5]
 forecast_yesterday = forecast_yesterday[forecast_yesterday['date'].dt.weekday < 5]
 
-# ====== Gabungkan semua data untuk grafik ======
+# ====== Gabungkan untuk visualisasi utama ======
 data = pd.concat([actual_data, forecast_data], ignore_index=True)
 
 # ====== SET PAGE ======
@@ -47,12 +46,9 @@ st.title("📈 Dashboard Prediksi Nilai Tukar USD/IDR")
 st.caption("Prediksi nilai tukar untuk 7 hari ke depan berdasarkan data 30 hari terakhir")
 
 # ====== GRAFIK UTAMA ======
-import plotly.graph_objects as go  # Tambahan untuk garis kustom
-
 last_actual_date = actual_data['date'].max()
 visual_data = data[data['date'] >= last_actual_date - pd.Timedelta(days=30)]
 
-# Buat grafik utama dari data aktual dan prediksi
 fig = px.line(
     visual_data,
     x='date',
@@ -67,9 +63,10 @@ fig.update_traces(
     hovertemplate='Tanggal: %{x|%d %b %Y}<br>Nilai: Rp %{y:,.2f}'
 )
 
-# ====== Tambahkan garis penghubung antara data aktual terakhir dan prediksi pertama ======
+# ====== Garis Penghubung Aktual -> Prediksi ======
 last_actual_point = actual_data.sort_values("date").iloc[-1]
-first_forecast_point = forecast_data.sort_values("date").iloc[0]
+# Hindari tumpang tindih, pastikan prediksi dimulai setelah aktual terakhir
+first_forecast_point = forecast_data[forecast_data["date"] > last_actual_point["date"]].sort_values("date").iloc[0]
 
 fig.add_trace(go.Scatter(
     x=[last_actual_point["date"], first_forecast_point["date"]],
@@ -81,7 +78,7 @@ fig.add_trace(go.Scatter(
     showlegend=True
 ))
 
-# Tampilkan grafik
+# ====== TAMPILKAN ======
 st.plotly_chart(fig, use_container_width=True)
 
 # ====== INFO PREDIKSI KEMARIN ======
@@ -96,12 +93,12 @@ try:
 except:
     st.warning("📌 Belum ada data aktual hari ini untuk membandingkan dengan prediksi kemarin.")
 
-# ====== NOTIFIKASI ======
+# ====== NOTIFIKASI LIBUR ======
 today = datetime.today().date()
 if today not in actual_data['date'].dt.date.values:
     st.warning("📅 Hari ini perdagangan libur")
 
-# ====== TREN NAIK/TURUN (lebih akurat) ======
+# ====== TREN NAIK/TURUN ======
 last_7_actual = actual_data.sort_values("date").tail(7)["value"].mean()
 next_7_forecast = forecast_data.sort_values("date").head(7)["value"].mean()
 
@@ -114,13 +111,19 @@ elif next_7_forecast < last_7_actual:
 else:
     st.info("📊 Nilai tukar diperkirakan stabil")
 
-# ====== SLIDER UNTUK RANGE WAKTU ======
+# ====== SLIDER UNTUK RENTANG TANGGAL ======
 min_date = data['date'].min().date()
 max_date = data['date'].max().date()
 
 date_range = st.slider("Pilih rentang tanggal", min_value=min_date, max_value=max_date, value=(min_date, max_date))
 filtered = data[(data['date'].dt.date >= date_range[0]) & (data['date'].dt.date <= date_range[1])]
 
-fig2 = px.line(filtered, x='date', y='value', color='type', line_dash='type',
-               title="Rentang Waktu yang Dipilih")
+fig2 = px.line(
+    filtered,
+    x='date',
+    y='value',
+    color='type',
+    line_dash='type',
+    title="Rentang Waktu yang Dipilih"
+)
 st.plotly_chart(fig2, use_container_width=True)
