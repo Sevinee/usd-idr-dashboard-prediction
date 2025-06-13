@@ -47,26 +47,41 @@ st.title("📈 Dashboard Prediksi Nilai Tukar USD/IDR")
 st.caption("Prediksi nilai tukar untuk 7 hari ke depan berdasarkan data 30 hari terakhir")
 
 # ====== GRAFIK UTAMA ======
+import plotly.graph_objects as go  # Tambahan untuk garis kustom
+
 last_actual_date = actual_data['date'].max()
 visual_data = data[data['date'] >= last_actual_date - pd.Timedelta(days=30)]
 
-fig = px.line(visual_data, x='date', y='value', color='type',
-              line_dash='type',
-              labels={'value': 'Nilai Tukar (Rp)', 'date': 'Tanggal'},
-              title='Nilai Tukar USD/IDR - Aktual dan Prediksi (30 Hari + Forecast)')
-fig.update_traces(mode="lines+markers", hovertemplate='Tanggal: %{x|%d %b %Y}<br>Nilai: Rp %{y:,.2f}')
-
-# ====== Tambahkan titik transisi aktual terakhir sebagai marker biru (tidak mengubah type) ======
-last_actual_point = actual_data.sort_values("date").iloc[-1:]
-fig.add_scatter(
-    x=last_actual_point["date"],
-    y=last_actual_point["value"],
-    mode="markers",
-    marker=dict(size=10, color="blue"),
-    name="Transisi Aktual → Prediksi",
-    showlegend=True
+# Buat grafik utama dari data aktual dan prediksi
+fig = px.line(
+    visual_data,
+    x='date',
+    y='value',
+    color='type',
+    line_dash='type',
+    labels={'value': 'Nilai Tukar (Rp)', 'date': 'Tanggal'},
+    title='Nilai Tukar USD/IDR - Aktual dan Prediksi (30 Hari + Forecast)'
+)
+fig.update_traces(
+    mode="lines+markers",
+    hovertemplate='Tanggal: %{x|%d %b %Y}<br>Nilai: Rp %{y:,.2f}'
 )
 
+# ====== Tambahkan garis penghubung antara data aktual terakhir dan prediksi pertama ======
+last_actual_point = actual_data.sort_values("date").iloc[-1]
+first_forecast_point = forecast_data.sort_values("date").iloc[0]
+
+fig.add_trace(go.Scatter(
+    x=[last_actual_point["date"], first_forecast_point["date"]],
+    y=[last_actual_point["value"], first_forecast_point["value"]],
+    mode="lines+markers",
+    line=dict(color="blue", dash="dot"),
+    marker=dict(size=10, color="blue"),
+    name="today actual",
+    showlegend=True
+))
+
+# Tampilkan grafik
 st.plotly_chart(fig, use_container_width=True)
 
 # ====== INFO PREDIKSI KEMARIN ======
