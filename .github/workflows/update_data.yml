@@ -37,11 +37,10 @@ jobs:
           git config user.email github-actions@github.com
           git fetch origin
           git reset --hard origin/main
-          
-          # Hapus cache lama agar dianggap sebagai perubahan baru
-          git rm --cached *.csv || true
 
-          # Tambahkan lagi file yang sudah diubah atau tetap sama
-          git add *.csv
+          # Paksa Git melihat file CSV sebagai perubahan
+          git rm --cached *.csv || true
+          git add -f *.csv
+
           git commit -m "Auto update CSV $(date +'%Y-%m-%d %H:%M:%S')" || echo "Nothing to commit"
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
