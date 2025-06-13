@@ -13,35 +13,37 @@ import plotly.express as px
 from datetime import datetime
 
 # ====== LOAD DATA ======
-# Gunakan comment="#" untuk skip baris komentar "# updated at"
 actual_data = pd.read_csv("usd_idr_actual.csv", comment="#", index_col=0)
 forecast_latest = pd.read_csv("usd_idr_pred_latest.csv", comment="#", index_col=0)
 forecast_yesterday = pd.read_csv("usd_idr_pred_yesterday.csv", comment="#", index_col=0)
 
-# Pastikan semua index jadi kolom date
+# Reset index dan pastikan kolom date
 actual_data = actual_data.reset_index().rename(columns={"index": "date"})
 forecast_latest = forecast_latest.reset_index().rename(columns={"index": "date"})
 forecast_yesterday = forecast_yesterday.reset_index().rename(columns={"index": "date"})
 
-# Pastikan format datetime
+# Konversi format date
 actual_data["date"] = pd.to_datetime(actual_data["date"])
 forecast_latest["date"] = pd.to_datetime(forecast_latest["date"])
 forecast_yesterday["date"] = pd.to_datetime(forecast_yesterday["date"])
 
-# Gabungkan prediksi terbaru ke satu dataframe
-forecast_data = forecast_latest.copy()
-forecast_data.rename(columns={"predicted_usd_idr": "value"}, inplace=True)
-forecast_data["type"] = "forecast"
-
-# Data aktual
+# Rename kolom agar seragam
 actual_data = actual_data.rename(columns={"usd_idr": "value"})
 actual_data["type"] = "actual"
 
-# ❗ Filter hanya hari kerja
+forecast_data = forecast_latest.rename(columns={"predicted_usd_idr": "value"})
+forecast_data["type"] = "forecast"
+
+# Filter hanya hari kerja
 forecast_data = forecast_data[forecast_data['date'].dt.weekday < 5]
 forecast_yesterday = forecast_yesterday[forecast_yesterday['date'].dt.weekday < 5]
 
-# Gabungkan semua
+# ====== Tambahkan transisi dari aktual terakhir ke forecast ======
+last_actual_point = actual_data.sort_values("date").iloc[-1:].copy()
+last_actual_point["type"] = "forecast"  # agar warnanya sama dengan prediksi
+forecast_data = pd.concat([last_actual_point, forecast_data], ignore_index=True)
+
+# Gabungkan semua data untuk grafik
 data = pd.concat([actual_data, forecast_data], ignore_index=True)
 
 # ====== SET PAGE ======
@@ -78,23 +80,17 @@ if today not in actual_data['date'].dt.date.values:
     st.warning("📅 Hari ini perdagangan libur")
 
 # ====== TREN NAIK/TURUN (lebih akurat) ======
-# Ambil rata-rata 7 hari aktual terakhir
 last_7_actual = actual_data.sort_values("date").tail(7)["value"].mean()
-
-# Ambil rata-rata forecast 7 hari ke depan
 next_7_forecast = forecast_data.sort_values("date").head(7)["value"].mean()
 
-# Tampilkan perbandingan nilai
 st.caption(f"📊 Rata-rata 7 hari terakhir: Rp {last_7_actual:,.2f} | Rata-rata forecast: Rp {next_7_forecast:,.2f}")
 
-# Bandingkan tren
 if next_7_forecast > last_7_actual:
     st.info("📈 Tren USD/IDR diperkirakan akan naik")
 elif next_7_forecast < last_7_actual:
     st.info("📉 Tren USD/IDR diperkirakan akan turun")
 else:
     st.info("📊 Nilai tukar diperkirakan stabil")
-
 
 # ====== SLIDER UNTUK RANGE WAKTU ======
 min_date = data['date'].min().date()
