@@ -605,18 +605,25 @@ plt.show()
 # Simpan data aktual
 df_exchange.rename(columns={"Exchange Rate USD/IDR": "usd_idr"}).to_csv("usd_idr_actual.csv", index_label="date")
 
-# Ubah nama kolom dulu sekali
+# Ubah nama kolom df1 agar konsisten
 df1 = df1.rename(columns={"Exchange Rate USD/IDR": "predicted_usd_idr"})
 
-# Simpan prediksi kemarin (baris pertama = prediksi untuk hari ini)
-df1.iloc[[0]].to_csv("usd_idr_pred_yesterday.csv", index_label="date")
+# ⬇⬇⬇ Ambil H+1 dari prediksi sebelumnya dan simpan sebagai prediksi kemarin
+try:
+    prev_pred_latest = pd.read_csv("usd_idr_pred_latest.csv", index_col=0)
+    if not prev_pred_latest.empty:
+        pred_yesterday = prev_pred_latest.iloc[[0]]  # H+1 dari kemarin
+        pred_yesterday.to_csv("usd_idr_pred_yesterday.csv", index_label="date")
+    else:
+        print("⚠ File prediksi sebelumnya kosong.")
+except FileNotFoundError:
+    print("⚠ Tidak ditemukan file prediksi sebelumnya (usd_idr_pred_latest.csv), lewati simpan prediksi kemarin.")
 
-# Simpan prediksi terbaru (H+1 dan seterusnya)
+# ⬇ Simpan prediksi terbaru (H+1 dan seterusnya) — baru dilakukan setelah ambil pred_yesterday
 df1.iloc[1:].to_csv("usd_idr_pred_latest.csv", index_label="date")
 
 from datetime import datetime
 
-# ⬇ Tambahkan timestamp sebagai komentar agar Git melihat file ini berubah
 for fname in [
     "usd_idr_actual.csv",
     "usd_idr_pred_latest.csv",
