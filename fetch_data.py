@@ -36,11 +36,13 @@ from tensorflow.keras.layers import Dense, LSTM
 # 1. Ambil Data Crude Oil, Emas, dan Kurs USD/IDR
 # ===============================
 start_date = '2010-01-01'
-end_date = datetime.today().strftime('%Y-%m-%d')
+# Tambahkan 1 hari agar data hari terakhir ikut terambil
+end_date = (datetime.today() + timedelta(days=1)).strftime('%Y-%m-%d')
 
-crude_oil = yf.download('CL=F', start=start_date, end=end_date)['Close']
-gold = yf.download('GC=F', start=start_date, end=end_date)['Close']
-usd_idr = yf.download('IDR=X', start=start_date, end=end_date)['Close']
+# Ambil data dari yfinance
+crude_oil = yf.download('CL=F', start=start_date, end=end_date, progress=False)['Close']
+gold = yf.download('GC=F', start=start_date, end=end_date, progress=False)['Close']
+usd_idr = yf.download('IDR=X', start=start_date, end=end_date, progress=False)['Close']
 
 # Gabungkan menjadi satu DataFrame
 df_market = pd.concat([usd_idr, crude_oil, gold], axis=1)
