@@ -2,7 +2,7 @@ name: Run Daily Forecast
 
 on:
   schedule:
-    - cron: '0 12 * * *'  # Run tiap hari jam 19.00 WIB
+    - cron: '0 02 * * *'  # Run tiap hari jam 9.00 WIB
   workflow_dispatch:
 
 jobs:
@@ -38,9 +38,11 @@ jobs:
           git fetch origin
           git reset --hard origin/main
 
-          # Paksa Git melihat file CSV sebagai perubahan
-          git rm --cached *.csv || true
-          git add -f *.csv
+          # Paksa Git mendeteksi perubahan CSV
+          rm -f *.csv
+          python forecasting.py  # jalankan ulang untuk regenerasi file
+
+          git add *.csv
 
           git commit -m "Auto update CSV $(date +'%Y-%m-%d %H:%M:%S')" || echo "Nothing to commit"
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main --force
