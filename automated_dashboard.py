@@ -14,9 +14,19 @@ from datetime import datetime
 import plotly.graph_objects as go
 
 # ====== LOAD DATA ======
-actual_data = pd.read_csv("usd_idr_actual.csv", comment="#", index_col=0)
-forecast_latest = pd.read_csv("usd_idr_pred_latest.csv", comment="#", index_col=0)
-forecast_yesterday = pd.read_csv("usd_idr_pred_yesterday.csv", comment="#", index_col=0)
+# Baca data aktual
+actual_data = pd.read_csv("usd_idr_actual.csv", index_col=0, comment="#")
+
+# Baca data prediksi terbaru (H+1 dan seterusnya)
+forecast_latest = pd.read_csv("usd_idr_pred_latest.csv", index_col=0, comment="#")
+
+# Coba baca data prediksi kemarin (H+1 dari kemarin = hari ini)
+try:
+    forecast_yesterday = pd.read_csv("usd_idr_pred_yesterday.csv", index_col=0, comment="#")
+    forecast_yesterday = forecast_yesterday[forecast_yesterday.columns.intersection(['predicted_usd_idr'])]
+except Exception as e:
+    forecast_yesterday = pd.DataFrame()
+    print("⚠️ Gagal membaca prediksi kemarin:", e)
 
 # ====== FORMAT ULANG ======
 actual_data = actual_data.reset_index().rename(columns={"index": "date"})

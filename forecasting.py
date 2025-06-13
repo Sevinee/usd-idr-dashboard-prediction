@@ -608,19 +608,32 @@ df_exchange.rename(columns={"Exchange Rate USD/IDR": "usd_idr"}).to_csv("usd_idr
 # Ubah nama kolom df1 agar konsisten
 df1 = df1.rename(columns={"Exchange Rate USD/IDR": "predicted_usd_idr"})
 
-# ⬇⬇⬇ Ambil H+1 dari prediksi sebelumnya dan simpan sebagai prediksi kemarin
+# ⬇⬇⬇ Tambahkan ini SEBELUM menulis ulang file pred_latest
 try:
     prev_pred_latest = pd.read_csv("usd_idr_pred_latest.csv", index_col=0)
     if not prev_pred_latest.empty:
-        pred_yesterday = prev_pred_latest.iloc[[0]]  # H+1 dari kemarin
+        pred_yesterday = prev_pred_latest.iloc[[0]]
         pred_yesterday.to_csv("usd_idr_pred_yesterday.csv", index_label="date")
+
+        # ⬅ Tambahkan komentar setelah baris data, agar GitHub detect file berubah
+        with open("usd_idr_pred_yesterday.csv", "a") as f:
+            f.write(f"# updated at {datetime.now()}\n")
+
     else:
         print("⚠ File prediksi sebelumnya kosong.")
-except FileNotFoundError:
-    print("⚠ Tidak ditemukan file prediksi sebelumnya (usd_idr_pred_latest.csv), lewati simpan prediksi kemarin.")
+except Exception as e:
+    print(f"⚠ Gagal simpan prediksi kemarin: {e}")
 
-# ⬇ Simpan prediksi terbaru (H+1 dan seterusnya) — baru dilakukan setelah ambil pred_yesterday
+# ⬇ Simpan prediksi terbaru
 df1.iloc[1:].to_csv("usd_idr_pred_latest.csv", index_label="date")
+
+# Tambahkan komentar ke file terbaru
+with open("usd_idr_pred_latest.csv", "a") as f:
+    f.write(f"# updated at {datetime.now()}\n")
+
+# Tambahkan komentar ke file aktual
+with open("usd_idr_actual.csv", "a") as f:
+    f.write(f"# updated at {datetime.now()}\n")
 
 from datetime import datetime
 
