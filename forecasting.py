@@ -611,3 +611,13 @@ df_forecast.rename(columns={"Exchange Rate USD/IDR": "predicted_usd_idr"}).to_cs
 # Simpan prediksi kemarin (semua kecuali baris terakhir)
 df_forecast.iloc[:-1].rename(columns={"Exchange Rate USD/IDR": "predicted_usd_idr"}).to_csv("usd_idr_pred_yesterday.csv", index_label="date")
 
+from datetime import datetime
+
+# ⬇ Tambahkan timestamp sebagai komentar agar Git melihat file ini berubah
+for fname in [
+    "usd_idr_actual.csv",
+    "usd_idr_pred_latest.csv",
+    "usd_idr_pred_yesterday.csv"
+]:
+    with open(fname, "a") as f:
+        f.write(f"# updated at {datetime.now()}\n")
