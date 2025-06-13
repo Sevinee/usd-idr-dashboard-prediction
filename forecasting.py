@@ -602,47 +602,33 @@ plt.legend(loc = "upper left")
 plt.grid()
 plt.show()
 
-# ======== 1. Simpan data aktual terbaru ========
-df_exchange.rename(columns={"Exchange Rate USD/IDR": "usd_idr"}).to_csv(
-    "usd_idr_actual.csv", index_label="date"
-)
-
-# ======== 2. Siapkan df1: hasil prediksi (1 hari + 7 hari) ========
-df1 = df1.rename(columns={"Exchange Rate USD/IDR": "predicted_usd_idr"})
-
-# ======== 3. Simpan prediksi kemarin dengan cara AMAN ========
-# Ambil prediksi sebelumnya (kemarin)
 from datetime import datetime
 
-try:
-    prev_pred_latest = pd.read_csv("usd_idr_pred_latest.csv", index_col=0, comment="#")
+# Simpan data aktual harian
+df_exchange = df_exchange.rename(columns={"Exchange Rate USD/IDR": "usd_idr"})
+df_exchange.to_csv("usd_idr_actual.csv", index_label="date")
 
-    if not prev_pred_latest.empty:
-        # Rename kolom jika perlu
-        if "Exchange Rate USD/IDR" in prev_pred_latest.columns:
-            prev_pred_latest = prev_pred_latest.rename(columns={
-                "Exchange Rate USD/IDR": "predicted_usd_idr"
-            })
-
-        # Ambil baris pertama dari prediksi sebelumnya (prediksi untuk hari ini)
-        pred_yesterday = prev_pred_latest.iloc[[0]]
-
-        # Simpan ke file
-        pred_yesterday.to_csv("usd_idr_pred_yesterday.csv", index_label="date")
-
-        # Tambahkan komentar agar GitHub deteksi file berubah
-        with open("usd_idr_pred_yesterday.csv", "a") as f:
-            f.write(f"# updated at {datetime.now()}\n")
-    else:
-        print("⚠ File prediksi sebelumnya kosong.")
-except Exception as e:
-    print(f"⚠ Gagal simpan prediksi kemarin: {e}")
-
-# ======== 4. Simpan prediksi terbaru (H+1 dan seterusnya) ========
+# Simpan prediksi terbaru (H+1 dan seterusnya)
+df1 = df1.rename(columns={"Exchange Rate USD/IDR": "predicted_usd_idr"})
 df1.iloc[1:].to_csv("usd_idr_pred_latest.csv", index_label="date")
 
-# Tambahkan komentar juga agar GitHub detect perubahan
-for fname in ["usd_idr_actual.csv", "usd_idr_pred_latest.csv"]:
+# Ambil tanggal aktual terakhir (biasanya hari ini)
+last_actual_date = df_exchange.index.max()
+
+# Cari prediksi yang sesuai tanggal aktual terakhir (misalnya prediksi untuk hari ini dari kemarin)
+pred_yesterday = df1[df1.index == last_actual_date]
+
+if not pred_yesterday.empty:
+    pred_yesterday.to_csv("usd_idr_pred_yesterday.csv", index_label="date")
+else:
+    print(f"⚠️ Tidak ditemukan prediksi untuk tanggal aktual terakhir ({last_actual_date})")
+
+# Tambahkan timestamp agar GitHub Action mendeteksi perubahan
+for fname in [
+    "usd_idr_actual.csv",
+    "usd_idr_pred_latest.csv",
+    "usd_idr_pred_yesterday.csv"
+]:
     with open(fname, "a") as f:
         f.write(f"# updated at {datetime.now()}\n")
 
