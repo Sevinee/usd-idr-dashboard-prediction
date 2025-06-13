@@ -39,4 +39,4 @@ jobs:
           git reset --hard origin/main
           git add -f *.csv || true
           git commit -m "Auto update CSV $(date +'%Y-%m-%d')" || echo "Nothing to commit"
-          git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
