@@ -63,7 +63,7 @@ fig.update_traces(
     hovertemplate='Tanggal: %{x|%d %b %Y}<br>Nilai: Rp %{y:,.2f}'
 )
 
-# ====== Garis Penghubung Aktual -> Prediksi (Fix agar tanggal sama ikut) ======
+# ====== Garis Penghubung Aktual -> Prediksi ======
 last_actual_point = actual_data.sort_values("date").iloc[-1]
 try:
     first_forecast_point = forecast_data[forecast_data["date"] >= last_actual_point["date"]].sort_values("date").iloc[0]
@@ -73,26 +73,35 @@ try:
         mode="lines+markers",
         line=dict(color="blue", dash="dot"),
         marker=dict(size=10, color="blue"),
-        name="today actual",
+        name="Actual → Forecast",
         showlegend=True
     ))
 except IndexError:
-    st.warning("⚠️ Prediksi tidak tersedia untuk tanggal setelah data aktual terakhir.")
+    st.warning("⚠️ Tidak ada titik prediksi yang sejajar atau setelah data aktual terakhir.")
 
 # ====== TAMPILKAN ======
 st.plotly_chart(fig, use_container_width=True)
 
 # ====== INFO PREDIKSI KEMARIN ======
 try:
-    yesterday = datetime.today().date() - pd.Timedelta(days=1)
-    pred_yest_val = forecast_yesterday.loc[forecast_yesterday['date'].dt.date == yesterday, 'predicted_usd_idr'].values[0]
-    actual_today_val = actual_data.loc[actual_data['date'].dt.date == datetime.today().date(), 'value'].values[0]
-    error = actual_today_val - pred_yest_val
-    delta_str = f"selisih {error:+,.2f} dari data aktual"
+    # Ambil tanggal terakhir dari data aktual
+    last_actual_date = actual_data['date'].max().date()
 
-    st.metric("Prediksi Kemarin", f"Rp {pred_yest_val:,.2f}", delta=delta_str)
-except:
-    st.warning("📌 Belum ada data aktual hari ini untuk membandingkan dengan prediksi kemarin.")
+    # Cek apakah forecast_yesterday punya prediksi untuk tanggal tersebut
+    pred_yest_val_series = forecast_yesterday[forecast_yesterday['date'].dt.date == last_actual_date]['predicted_usd_idr']
+
+    if not pred_yest_val_series.empty:
+        pred_yest_val = pred_yest_val_series.values[0]
+        actual_today_val = actual_data[actual_data['date'].dt.date == last_actual_date]['value'].values[0]
+        error = actual_today_val - pred_yest_val
+        delta_str = f"selisih {error:+,.2f} dari data aktual"
+        st.metric("Prediksi Kemarin", f"Rp {pred_yest_val:,.2f}", delta=delta_str)
+    else:
+        st.warning("📌 Tidak ada prediksi kemarin yang sesuai untuk dibandingkan dengan data aktual terakhir.")
+except Exception as e:
+    st.warning("📌 Gagal membandingkan prediksi kemarin dengan data aktual.")
+    st.exception(e)
+
 
 # ====== NOTIFIKASI LIBUR ======
 today = datetime.today().date()
