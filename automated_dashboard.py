@@ -77,13 +77,24 @@ today = datetime.today().date()
 if today not in actual_data['date'].dt.date.values:
     st.warning("📅 Hari ini perdagangan libur")
 
-# Tren naik/turun
-if forecast_data['value'].mean() > actual_data['value'].mean():
+# ====== TREN NAIK/TURUN (lebih akurat) ======
+# Ambil rata-rata 7 hari aktual terakhir
+last_7_actual = actual_data.sort_values("date").tail(7)["value"].mean()
+
+# Ambil rata-rata forecast 7 hari ke depan
+next_7_forecast = forecast_data.sort_values("date").head(7)["value"].mean()
+
+# Tampilkan perbandingan nilai
+st.caption(f"📊 Rata-rata 7 hari terakhir: Rp {last_7_actual:,.2f} | Rata-rata forecast: Rp {next_7_forecast:,.2f}")
+
+# Bandingkan tren
+if next_7_forecast > last_7_actual:
     st.info("📈 Tren USD/IDR diperkirakan akan naik")
-elif forecast_data['value'].mean() < actual_data['value'].mean():
+elif next_7_forecast < last_7_actual:
     st.info("📉 Tren USD/IDR diperkirakan akan turun")
 else:
     st.info("📊 Nilai tukar diperkirakan stabil")
+
 
 # ====== SLIDER UNTUK RANGE WAKTU ======
 min_date = data['date'].min().date()
