@@ -93,20 +93,31 @@ st.plotly_chart(fig, use_container_width=True)
 
 # ====== INFO PREDIKSI KEMARIN ======
 try:
-    last_actual_date = actual_data['date'].max().date()
-    pred_yest_val_series = forecast_yesterday[forecast_yesterday['date'].dt.date == last_actual_date]['predicted_usd_idr']
+    # Kita ambil tanggal aktual "kemarin"
+    yesterday_date = actual_data['date'].max().date() - pd.Timedelta(days=1)
+
+    # Ambil prediksi H+1 yang dibuat kemarin (artinya untuk tanggal 'yesterday_date')
+    pred_yest_val_series = forecast_yesterday[
+        forecast_yesterday['date'].dt.date == yesterday_date
+    ]['predicted_usd_idr']
 
     if not pred_yest_val_series.empty:
         pred_yest_val = pred_yest_val_series.values[0]
-        actual_today_val = actual_data[actual_data['date'].dt.date == last_actual_date]['value'].values[0]
-        error = actual_today_val - pred_yest_val
+
+        # Ambil nilai aktual untuk tanggal yang sama (yesterday_date)
+        actual_val = actual_data[
+            actual_data['date'].dt.date == yesterday_date
+        ]['value'].values[0]
+
+        error = actual_val - pred_yest_val
         delta_str = f"selisih {error:+,.2f} dari data aktual"
-        st.metric("Prediksi Kemarin", f"Rp {pred_yest_val:,.2f}", delta=delta_str)
+        st.metric(f"Prediksi untuk {yesterday_date}", f"Rp {pred_yest_val:,.2f}", delta=delta_str)
     else:
-        st.warning("📌 Tidak ada prediksi kemarin yang sesuai untuk dibandingkan dengan data aktual terakhir.")
+        st.warning(f"📌 Tidak ada prediksi dari kemarin untuk tanggal {yesterday_date}.")
 except Exception as e:
     st.warning("📌 Gagal membandingkan prediksi kemarin dengan data aktual.")
     st.exception(e)
+
 
 # ====== NOTIFIKASI LIBUR (Weekend Saja) ======
 today = datetime.today()
