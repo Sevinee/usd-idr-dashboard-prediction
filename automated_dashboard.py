@@ -58,28 +58,37 @@ fig = px.line(
     labels={'value': 'Nilai Tukar (Rp)', 'date': 'Tanggal'},
     title='Nilai Tukar USD/IDR - Aktual dan Prediksi (30 Hari + Forecast)'
 )
+
+# Format tooltip dan garis utama
 fig.update_traces(
     mode="lines+markers",
     hovertemplate='Tanggal: %{x|%d %b %Y}<br>Nilai: Rp %{y:,.2f}'
 )
 
-# ====== Garis Penghubung Aktual -> Prediksi ======
+# 🎨 Ubah warna actual dan forecast
+fig.for_each_trace(
+    lambda trace: trace.update(
+        line=dict(color='#1f77b4') if trace.name == 'actual' else
+             dict(color='#ff7f0e') if trace.name == 'forecast' else trace.line
+    )
+)
+
+# ====== Garis Penghubung Aktual -> Forecast ======
 last_actual_point = actual_data.sort_values("date").iloc[-1]
 try:
-    first_forecast_point = forecast_data[forecast_data["date"] > last_actual_point["date"]].sort_values("date").iloc[0]
+    first_forecast_point = forecast_data[forecast_data["date"] >= last_actual_point["date"]].sort_values("date").iloc[0]
     fig.add_trace(go.Scatter(
         x=[last_actual_point["date"], first_forecast_point["date"]],
         y=[last_actual_point["value"], first_forecast_point["value"]],
-        mode="lines+markers",
-        line=dict(color="blue", dash="dot"),
-        marker=dict(size=10, color="blue"),
-        name="Today Actual",
-        showlegend=True
+        mode="lines",
+        line=dict(color="#ff7f0e", dash="dot"),
+        name="",
+        showlegend=False
     ))
 except IndexError:
-    st.warning("⚠️ Tidak ada titik prediksi setelah data aktual terakhir.")
+    st.warning("⚠ Prediksi tidak tersedia untuk tanggal setelah data aktual terakhir.")
 
-# ====== TAMPILKAN GRAFIK ======
+# ====== TAMPILKAN ======
 st.plotly_chart(fig, use_container_width=True)
 
 # ====== INFO PREDIKSI KEMARIN ======
