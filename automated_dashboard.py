@@ -14,14 +14,19 @@ from datetime import datetime
 
 # ====== LOAD DATA ======
 # Gunakan comment="#" untuk skip baris komentar "# updated at"
-actual_data = pd.read_csv("usd_idr_actual.csv", comment="#", parse_dates=["date"])
-forecast_latest = pd.read_csv("usd_idr_pred_latest.csv", comment="#", parse_dates=["date"])
-forecast_yesterday = pd.read_csv("usd_idr_pred_yesterday.csv", comment="#", parse_dates=["date"])
+actual_data = pd.read_csv("usd_idr_actual.csv", comment="#", index_col=0)
+forecast_latest = pd.read_csv("usd_idr_pred_latest.csv", comment="#", index_col=0)
+forecast_yesterday = pd.read_csv("usd_idr_pred_yesterday.csv", comment="#", index_col=0)
 
-# Pastikan semua kolom date dalam format datetime
-actual_data['date'] = pd.to_datetime(actual_data['date'])
-forecast_latest['date'] = pd.to_datetime(forecast_latest['date'])
-forecast_yesterday['date'] = pd.to_datetime(forecast_yesterday['date'])
+# Pastikan semua index jadi kolom date
+actual_data = actual_data.reset_index().rename(columns={"index": "date"})
+forecast_latest = forecast_latest.reset_index().rename(columns={"index": "date"})
+forecast_yesterday = forecast_yesterday.reset_index().rename(columns={"index": "date"})
+
+# Pastikan format datetime
+actual_data["date"] = pd.to_datetime(actual_data["date"])
+forecast_latest["date"] = pd.to_datetime(forecast_latest["date"])
+forecast_yesterday["date"] = pd.to_datetime(forecast_yesterday["date"])
 
 # Gabungkan prediksi terbaru ke satu dataframe
 forecast_data = forecast_latest.copy()
