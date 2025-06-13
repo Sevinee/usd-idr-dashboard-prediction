@@ -14,8 +14,12 @@ from datetime import datetime
 
 # ====== LOAD DATA ======
 actual_data = pd.read_csv("usd_idr_actual.csv", parse_dates=["date"])
-forecast_yesterday = pd.read_csv("usd_idr_pred_yesterday.csv", parse_dates=["date"])
-forecast_latest = pd.read_csv("usd_idr_pred_latest.csv", parse_dates=["date"])
+forecast_yesterday = pd.read_csv("usd_idr_pred_yesterday.csv")
+forecast_latest = pd.read_csv("usd_idr_pred_latest.csv")
+
+# Pastikan kolom date dalam format datetime
+forecast_latest['date'] = pd.to_datetime(forecast_latest['date'])
+forecast_yesterday['date'] = pd.to_datetime(forecast_yesterday['date'])
 
 # Gabungkan prediksi terbaru ke satu dataframe
 forecast_data = forecast_latest.copy()
@@ -25,11 +29,6 @@ forecast_data["type"] = "forecast"
 # Data aktual
 actual_data = actual_data.rename(columns={"usd_idr": "value"})
 actual_data["type"] = "actual"
-
-# Gabungkan prediksi terbaru ke satu dataframe
-forecast_data = forecast_latest.copy()
-forecast_data.rename(columns={"predicted_usd_idr": "value"}, inplace=True)
-forecast_data["type"] = "forecast"
 
 # ❗ Filter hanya hari kerja
 forecast_data = forecast_data[forecast_data['date'].dt.weekday < 5]
@@ -52,7 +51,6 @@ fig = px.line(visual_data, x='date', y='value', color='type',
               line_dash='type',
               labels={'value': 'Nilai Tukar (Rp)', 'date': 'Tanggal'},
               title='Nilai Tukar USD/IDR - Aktual dan Prediksi (30 Hari + Forecast)')
-
 
 fig.update_traces(mode="lines+markers", hovertemplate='Tanggal: %{x|%d %b %Y}<br>Nilai: Rp %{y:,.2f}')
 st.plotly_chart(fig, use_container_width=True)
