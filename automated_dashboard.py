@@ -38,12 +38,7 @@ forecast_data["type"] = "forecast"
 forecast_data = forecast_data[forecast_data['date'].dt.weekday < 5]
 forecast_yesterday = forecast_yesterday[forecast_yesterday['date'].dt.weekday < 5]
 
-# ====== Tambahkan transisi dari aktual terakhir ke forecast ======
-last_actual_point = actual_data.sort_values("date").iloc[-1:].copy()
-last_actual_point["type"] = "forecast"  # agar warnanya sama dengan prediksi
-forecast_data = pd.concat([last_actual_point, forecast_data], ignore_index=True)
-
-# Gabungkan semua data untuk grafik
+# ====== Gabungkan semua data untuk grafik ======
 data = pd.concat([actual_data, forecast_data], ignore_index=True)
 
 # ====== SET PAGE ======
@@ -60,6 +55,18 @@ fig = px.line(visual_data, x='date', y='value', color='type',
               labels={'value': 'Nilai Tukar (Rp)', 'date': 'Tanggal'},
               title='Nilai Tukar USD/IDR - Aktual dan Prediksi (30 Hari + Forecast)')
 fig.update_traces(mode="lines+markers", hovertemplate='Tanggal: %{x|%d %b %Y}<br>Nilai: Rp %{y:,.2f}')
+
+# ====== Tambahkan titik transisi aktual terakhir sebagai marker biru (tidak mengubah type) ======
+last_actual_point = actual_data.sort_values("date").iloc[-1:]
+fig.add_scatter(
+    x=last_actual_point["date"],
+    y=last_actual_point["value"],
+    mode="markers",
+    marker=dict(size=10, color="blue"),
+    name="Transisi Aktual → Prediksi",
+    showlegend=True
+)
+
 st.plotly_chart(fig, use_container_width=True)
 
 # ====== INFO PREDIKSI KEMARIN ======
