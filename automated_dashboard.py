@@ -98,7 +98,7 @@ try:
 
     if not pred_yest_val_series.empty:
         pred_yest_val = pred_yest_val_series.values[0]
-        actual_today_val = actual_data[actual_data['date'].dt.date == last_actual_date]['value'].values[1]
+        actual_today_val = actual_data[actual_data['date'].dt.date == last_actual_date]['value'].values[0]
         error = actual_today_val - pred_yest_val
         delta_str = f"selisih {error:+,.2f} dari data aktual"
         st.metric("Prediksi Kemarin", f"Rp {pred_yest_val:,.2f}", delta=delta_str)
