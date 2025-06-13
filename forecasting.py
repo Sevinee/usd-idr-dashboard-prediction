@@ -162,10 +162,14 @@ prediction1 = prediction1[:,0]
 # DF data test vs prediksi
 df_test1 = df_final["usd_idr"][int(len(df_final)*0.8):]
 prediction1 = np.array(prediction1)
+
+min_len = min(len(df_test1), len(prediction1))
+df_test1 = df_test1[-min_len:]
+prediction1 = prediction1[-min_len:]
+
 df_hasil1 = pd.DataFrame()
 df_hasil1['Real USD/IDR'] = df_test1
 df_hasil1['Prediction'] = prediction1
-df_hasil1
 
 # Plot data test vs forecast
 plt.figure(figsize = (16,8))
