@@ -25,23 +25,26 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Hapus file CSV lama
-        run: |
-          rm -f *.csv  # Hapus semua file CSV supaya dianggap baru
-
-      - name: Run fetch script
-        run: python fetch_data.py
-
-      - name: Run forecast script
-        run: python forecasting.py
-
-      - name: Commit and Push CSV results
+      - name: Hapus file CSV lama dari Git index
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git fetch origin
           git reset --hard origin/main
-          
+
+          git rm -f usd_idr_actual.csv || true
+          git rm -f usd_idr_pred_latest.csv || true
+          git rm -f usd_idr_pred_yesterday.csv || true
+          git rm -f preprocessed_actual_data.csv || true
+
+      - name: Jalankan fetch script
+        run: python fetch_data.py
+
+      - name: Jalankan forecast script
+        run: python forecasting.py
+
+      - name: Commit dan Push file CSV terbaru
+        run: |
           git add *.csv
 
           git commit -m "Auto update CSV $(date +'%Y-%m-%d %H:%M:%S')" || echo "Nothing to commit"
