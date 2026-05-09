@@ -127,31 +127,46 @@ st.plotly_chart(fig, use_container_width=True)
 
 # ====== INFO PREDIKSI KEMARIN ======
 try:
-    # Kita ambil tanggal aktual "kemarin"
-    yesterday_date = actual_data['date'].max().date() - pd.Timedelta(days=1)
+    # Ambil tanggal aktual terakhir (hari ini)
+    target_date = actual_data['date'].max().normalize()
 
-    # Ambil prediksi H+1 yang dibuat kemarin (artinya untuk tanggal 'yesterday_date')
-    pred_yest_val_series = forecast_yesterday[
-        forecast_yesterday['date'].dt.date == yesterday_date
-    ]['predicted_usd_idr']
+    # Cari prediksi dari kemarin untuk tanggal target_date
+    pred_yest_row = forecast_yesterday[
+        forecast_yesterday['date'].dt.normalize() == target_date
+    ]
 
-    if not pred_yest_val_series.empty:
-        pred_yest_val = pred_yest_val_series.values[0]
+    if not pred_yest_row.empty:
 
-        # Ambil nilai aktual untuk tanggal yang sama (yesterday_date)
+        # Ambil nilai prediksi
+        if 'predicted_usd_idr' in pred_yest_row.columns:
+            pred_yest_val = pred_yest_row['predicted_usd_idr'].iloc[0]
+        else:
+            pred_yest_val = pred_yest_row['value'].iloc[0]
+
+        # Ambil nilai aktual
         actual_val = actual_data[
-            actual_data['date'].dt.date == yesterday_date
-        ]['value'].values[0]
+            actual_data['date'].dt.normalize() == target_date
+        ]['value'].iloc[0]
 
+        # Hitung selisih
         error = actual_val - pred_yest_val
-        delta_str = f"selisih {error:+,.2f} dari data aktual"
-        st.metric(f"Prediksi untuk {yesterday_date}", f"Rp {pred_yest_val:,.2f}", delta=delta_str)
+
+        delta_str = f"Selisih {error:+,.2f} dari aktual"
+
+        st.metric(
+            label=f"Prediksi untuk {target_date.date()}",
+            value=f"Rp {pred_yest_val:,.2f}",
+            delta=delta_str
+        )
+
     else:
-        st.warning(f"📌 Tidak ada prediksi dari kemarin untuk tanggal {yesterday_date}.")
+        st.warning(
+            f"📌 Tidak ditemukan prediksi dari kemarin untuk {target_date.date()}"
+        )
+
 except Exception as e:
     st.warning("📌 Gagal membandingkan prediksi kemarin dengan data aktual.")
     st.exception(e)
-
 
 # ====== NOTIFIKASI LIBUR (Weekend Saja) ======
 today = datetime.today()
