@@ -128,16 +128,17 @@ st.plotly_chart(fig, use_container_width=True)
 # ====== INFO PREDIKSI KEMARIN ======
 try:
     if not forecast_yesterday.empty:
-        # Ambil tanggal prediksi (misal 2026-05-11)
+        # Pastikan kolom nilai ada (bisa 'value' atau 'predicted_usd_idr')
+        if 'value' not in forecast_yesterday.columns and 'predicted_usd_idr' in forecast_yesterday.columns:
+            forecast_yesterday = forecast_yesterday.rename(columns={"predicted_usd_idr": "value"})
+        
         pred_date = forecast_yesterday['date'].iloc[0].normalize()
         pred_val = forecast_yesterday['value'].iloc[0]
 
-        # Cari data aktual pada tanggal yang sama
         actual_row = actual_data[actual_data['date'] == pred_date]
-
         if not actual_row.empty:
             actual_val = actual_row['value'].iloc[0]
-            error = pred_val - actual_val   # error prediksi
+            error = pred_val - actual_val
             delta_str = f"Prediksi {pred_val:,.2f} - Aktual {actual_val:,.2f} = {error:+,.2f}"
             st.metric(
                 label=f"📌 Prediksi untuk {pred_date.date()} (dari kemarin)",
@@ -145,20 +146,15 @@ try:
                 delta=delta_str
             )
         else:
-            # Data aktual belum tersedia (mungkin masih hari H atau pasar tutup)
-            st.info(f"📌 Prediksi dari kemarin untuk tanggal **{pred_date.date()}** adalah **Rp {pred_val:,.2f}**.\n"
-                    f"Data aktual untuk tanggal tersebut belum masuk. Cek kembali nanti.")
+            st.info(f"📌 Prediksi dari kemarin untuk tanggal **{pred_date.date()}** adalah **Rp {pred_val:,.2f}**.\nData aktual untuk tanggal tersebut belum masuk.")
     else:
-        st.warning("📌 Tidak ada data prediksi dari kemarin (file kosong atau backup tidak ditemukan).")
-        
-        # Fallback: tampilkan perubahan aktual terbaru jika ada
+        st.warning("📌 Tidak ada data prediksi dari kemarin.")
         if len(actual_data) >= 2:
             yesterday_val = actual_data.iloc[-2]['value']
             today_val = actual_data.iloc[-1]['value']
-            st.info(f"ℹ️ Perubahan aktual terbaru: {today_val - yesterday_val:+,.2f} "
-                    f"(dari {yesterday_val:.2f} ke {today_val:.2f})")
+            st.info(f"ℹ️ Perubahan aktual terbaru: {today_val - yesterday_val:+,.2f}")
 except Exception as e:
-    st.warning("📌 Gagal membandingkan prediksi kemarin dengan data aktual.")
+    st.warning("Gagal membandingkan prediksi kemarin dengan data aktual.")
     st.exception(e)
 
 # ====== NOTIFIKASI LIBUR (Weekend Saja) ======
