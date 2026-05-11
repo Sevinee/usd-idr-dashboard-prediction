@@ -127,43 +127,36 @@ st.plotly_chart(fig, use_container_width=True)
 
 # ====== INFO PREDIKSI KEMARIN ======
 try:
-    # Ambil tanggal aktual terakhir (hari ini)
-    target_date = actual_data['date'].max().normalize()
+    if not forecast_yesterday.empty:
+        # Ambil tanggal prediksi (misal 2026-05-11)
+        pred_date = forecast_yesterday['date'].iloc[0].normalize()
+        pred_val = forecast_yesterday['value'].iloc[0]
 
-    # Cari prediksi dari kemarin untuk tanggal target_date
-    pred_yest_row = forecast_yesterday[
-        forecast_yesterday['date'].dt.normalize() == target_date
-    ]
+        # Cari data aktual pada tanggal yang sama
+        actual_row = actual_data[actual_data['date'] == pred_date]
 
-    if not pred_yest_row.empty:
-
-        # Ambil nilai prediksi
-        if 'predicted_usd_idr' in pred_yest_row.columns:
-            pred_yest_val = pred_yest_row['predicted_usd_idr'].iloc[0]
+        if not actual_row.empty:
+            actual_val = actual_row['value'].iloc[0]
+            error = pred_val - actual_val   # error prediksi
+            delta_str = f"Prediksi {pred_val:,.2f} - Aktual {actual_val:,.2f} = {error:+,.2f}"
+            st.metric(
+                label=f"📌 Prediksi untuk {pred_date.date()} (dari kemarin)",
+                value=f"Rp {pred_val:,.2f}",
+                delta=delta_str
+            )
         else:
-            pred_yest_val = pred_yest_row['value'].iloc[0]
-
-        # Ambil nilai aktual
-        actual_val = actual_data[
-            actual_data['date'].dt.normalize() == target_date
-        ]['value'].iloc[0]
-
-        # Hitung selisih
-        error = actual_val - pred_yest_val
-
-        delta_str = f"Selisih {error:+,.2f} dari aktual"
-
-        st.metric(
-            label=f"Prediksi untuk {target_date.date()}",
-            value=f"Rp {pred_yest_val:,.2f}",
-            delta=delta_str
-        )
-
+            # Data aktual belum tersedia (mungkin masih hari H atau pasar tutup)
+            st.info(f"📌 Prediksi dari kemarin untuk tanggal **{pred_date.date()}** adalah **Rp {pred_val:,.2f}**.\n"
+                    f"Data aktual untuk tanggal tersebut belum masuk. Cek kembali nanti.")
     else:
-        st.warning(
-            f"📌 Tidak ditemukan prediksi dari kemarin untuk {target_date.date()}"
-        )
-
+        st.warning("📌 Tidak ada data prediksi dari kemarin (file kosong atau backup tidak ditemukan).")
+        
+        # Fallback: tampilkan perubahan aktual terbaru jika ada
+        if len(actual_data) >= 2:
+            yesterday_val = actual_data.iloc[-2]['value']
+            today_val = actual_data.iloc[-1]['value']
+            st.info(f"ℹ️ Perubahan aktual terbaru: {today_val - yesterday_val:+,.2f} "
+                    f"(dari {yesterday_val:.2f} ke {today_val:.2f})")
 except Exception as e:
     st.warning("📌 Gagal membandingkan prediksi kemarin dengan data aktual.")
     st.exception(e)
